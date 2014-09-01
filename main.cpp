@@ -1,4 +1,4 @@
-#include "Matrix.h"
+#include "HEADER/Matrix.h"
 
 int main(){
 try{
@@ -47,7 +47,20 @@ try{
 	Matrix<int> f(3,3, tomb2);
 	std::cout << f;
 	std::cout << f.det() << std::endl;
+	std::cout << f;
 
+
+	std::cout << f.trans() << std::endl;
+
+	std::cout << std::endl;
+
+	std::cout << a;
+	std::cout << a.trans();
+
+
+	std::cout << f.inverse();
+	//Matrix<double> g(3,3,tomb2);
+	//std::cout << g*g.inverse();
 
  	} catch(myexception e){
  		std::cout << e.what()<< std::endl	;

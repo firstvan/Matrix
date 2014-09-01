@@ -16,7 +16,7 @@ public:
    		 return fail;
   	}
 
-  	virtual ~myexception(){}
+  	virtual ~myexception() throw(){}
 };
 
 
@@ -30,8 +30,9 @@ public:
 /* Constructors */
 	Matrix();						//empty matrix
 	Matrix(int, int);				//zero matrix
-	Matrix(int, int, const T*);		//initialized matrix
-	Matrix(int, int, std::vector<T>&);
+	Matrix(int, int, const T*);		//initialized with array
+	Matrix(int, int, std::vector<T>&); //initialized with vector
+	Matrix(int row, int col, const std::initializer_list<T>& values);
 	Matrix(const Matrix&);			//copy ctor
 	Matrix& operator=(const Matrix&);	//assigment operator*/
 	~Matrix(){}						//destructor
@@ -43,7 +44,9 @@ public:
 	std::vector<T> getMatrix() const;
 
 
+
 /* Operators */
+	void operator()(int, T);
 	Matrix operator+(const Matrix&);
 	Matrix operator+=(const Matrix&);
 	Matrix operator-(const Matrix&);
@@ -54,8 +57,9 @@ public:
 
 /* Actions */
 	double det();
-//	Matrix trans();
-//	Matrix inverse();
+	Matrix trans();
+	Matrix<double> inverse();
+	bool square();
 
 
 
@@ -88,6 +92,11 @@ Matrix<T>::Matrix(const Matrix<T>& rhs) : _rows(rhs.getRows()), _cols(rhs.getCol
 {}
 
 template<typename T>
+Matrix<T>::Matrix(int row, int col, const std::initializer_list<T>& values) : _rows(row), _cols(col), _matrix(values)
+{}
+
+
+template<typename T>
 Matrix<T>& Matrix<T>::operator=(const Matrix<T>& rhs){
 	if(this != &rhs)
 	{
@@ -98,6 +107,11 @@ Matrix<T>& Matrix<T>::operator=(const Matrix<T>& rhs){
 	
 	return *this;
 
+}
+
+template<typename T>
+void Matrix<T>::operator()(int i, T value){
+	_matrix[i] = value;
 }
 
 template<typename T>
@@ -295,12 +309,12 @@ double Matrix<T>::det(){
 				}
 			}
 
-		for(int i = 0; i < dim; i++)
+		/*for(int i = 0; i < dim; i++)
 		{
 			for(int j = 0; j < dim; j++)
 				std::cout << A[i][j] << ", "; 
 			std::cout<< std::endl;
-		}
+		}*/
 
 
 		// Sum the diagonal
@@ -309,9 +323,125 @@ double Matrix<T>::det(){
 
 		return result;
 	}
-	
-
-
-
 }
+	
+template<typename T>
+Matrix<T> Matrix<T>::trans(){
+
+	Matrix<T> tempMatrix(this->getColls(),this->getRows());
+
+	for(int n = 0; n < this->getRows() * this->getColls(); ++n)
+	{
+		int i = n / this->getRows();
+		int j = n % this->getRows();
+		tempMatrix._matrix[n] = this->_matrix[this->getColls() * j + i];
+	}
+
+	return tempMatrix;
+}
+
+template<typename T>
+Matrix<double> Matrix<T>::inverse(){
+	if((!this->square()) || this->det() == 0 )
+		throw myexception("This matrix has no inverse");
+
+	Matrix<double> tempMatrix(this->getRows(),this->getColls());
+	double E[this->getRows()][this->getColls()];
+	for(int i = 0; i < this->getRows(); i++)
+		for(int j = 0; j < this->getColls(); j++)
+		{
+			if(i == j)
+				E[i][j] = 1;
+			else
+				E[i][j] = 0;
+			
+		}
+
+
+
+	double c;
+	T A[this->getRows()][this->getColls()];
+	int dim = this->getRows();
+	int k = 0;
+	for(int i = 0; i < this->getRows(); i++)
+		for(int j = 0; j < this->getColls(); j++)
+		{
+			A[i][j] = this->element(k);
+			k++;
+		}
+	
+	for(int i = 0; i < dim; i++)
+		for(int j = 0; j < dim; j++)
+		{
+			if(j>i)
+			{
+				c = (double)A[j][i]/(double)A[i][i];
+				for(k = 0; k < dim; k++)
+				{
+					A[j][k] = A[j][k]-c*A[i][k];
+					E[j][k] = E[j][k]-c*E[i][k];
+				}
+			}
+		}
+
+	for(int i = 0; i < dim; i++)
+		for(int j = 0; j < dim; j++)
+		{
+			if(j<i)
+			{
+				c = (double)A[j][i]/(double)A[i][i];
+				for(k = 0; k < dim; k++)
+				{
+					A[j][k] = A[j][k]-c*A[i][k];
+					E[j][k] = E[j][k]-c*E[i][k];
+				}
+			}
+		}
+
+
+	for(int i = 0; i < dim; i++)
+		for(int j = 0; j < dim; j++)
+		{
+			if(i == j)
+			{
+				E[i][j] = E[i][j]/A[i][j];
+				A[i][j] = A[i][j]/A[i][j];
+			}
+		}
+	for(int i = 0; i < dim; i++)
+	{
+		for(int j = 0; j < dim; j++)
+			std::cout << A[i][j] << ", "; 
+		std::cout<< std::endl;
+	}
+
+	for(int i = 0; i < this->getRows(); i++)
+	{
+		for(int j = 0; j < this->getColls(); j++)
+		{
+			std::cout << E[i][j] << ", ";
+		}
+		
+		std::cout << std::endl;
+	}
+
+	k = 0;
+	for(int i = 0; i < this->getRows(); i++)
+	{
+		for(int j = 0; j < this->getColls(); j++)
+		{
+			tempMatrix(k, E[i][j]);
+			k++;
+		}
+	}
+
+
+	return tempMatrix;
+}
+
+template<typename T>
+bool Matrix<T>::square(){
+	return this->getColls() == this->getRows() ? true : false; 
+}
+
 #endif
