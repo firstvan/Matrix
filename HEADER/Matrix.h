@@ -62,7 +62,6 @@ public:
 	bool square();
 
 
-
 };
 
 template<typename T>
@@ -221,6 +220,14 @@ Matrix<T> Matrix<T>::operator*(const Matrix& rhs){
 
 }
 
+/*
+template<typename T>
+Matrix<T> Matrix<T>::operator/(const Matrix& rhs){
+
+	return *this * (1 / rhs);
+
+}*/
+
 
 template<typename T>
 int Matrix<T>::getColls() const{
@@ -259,7 +266,7 @@ std::ostream& operator<<(std::ostream& os,const Matrix<T>& va)
 		for(int j = 0; j < va.getColls();j++)
 		{
 			
-			os << std::setw(maxlength) << va.element(i * va.getColls() + j);
+			os << std::setw(maxlength) <<std::setprecision(2) << va.element(i * va.getColls() + j);
 			if(j != va.getColls()-1)
 				std::cout << " ";
 			
@@ -345,103 +352,97 @@ Matrix<double> Matrix<T>::inverse(){
 	if((!this->square()) || this->det() == 0 )
 		throw myexception("This matrix has no inverse");
 
-	Matrix<double> tempMatrix(this->getRows(),this->getColls());
-	double E[this->getRows()][this->getColls()];
-	for(int i = 0; i < this->getRows(); i++)
-		for(int j = 0; j < this->getColls(); j++)
-		{
-			if(i == j)
-				E[i][j] = 1;
-			else
-				E[i][j] = 0;
-			
-		}
-
-
-
-	double c;
-	T A[this->getRows()][this->getColls()];
 	int dim = this->getRows();
 	int k = 0;
-	for(int i = 0; i < this->getRows(); i++)
-		for(int j = 0; j < this->getColls(); j++)
-		{
-			A[i][j] = this->element(k);
-			k++;
-		}
-	
-	for(int i = 0; i < dim; i++)
-		for(int j = 0; j < dim; j++)
-		{
-			if(j>i)
-			{
-				c = (double)A[j][i]/(double)A[i][i];
-				for(k = 0; k < dim; k++)
-				{
-					A[j][k] = A[j][k]-c*A[i][k];
-					E[j][k] = E[j][k]-c*E[i][k];
-				}
-			}
-		}
 
-	for(int i = 0; i < dim; i++)
-		for(int j = 0; j < dim; j++)
-		{
-			if(j<i)
-			{
-				c = (double)A[j][i]/(double)A[i][i];
-				for(k = 0; k < dim; k++)
-				{
-					A[j][k] = A[j][k]-c*A[i][k];
-					E[j][k] = E[j][k]-c*E[i][k];
-				}
-			}
-		}
-
-
+	double s1[dim][dim] = {0};
+	double e1[dim][dim] = {0};
+	// létrehozom a mátrix 2 dim tömbjét + inicializálom az egységmátrixot
 	for(int i = 0; i < dim; i++)
 		for(int j = 0; j < dim; j++)
 		{
 			if(i == j)
+				e1[i][j] = 1;
+			else
+				e1[i][j] = 0;
+
+			s1[i][j] = this->element(k);
+			k++;
+		}
+
+	//Gauss elimináció
+	for(int n = 0; n < dim; n++)
+	{
+		//a főátló elemeivel leosztok
+		double division = s1[n][n];
+		for(int s = 0; s < dim; s++)
+		{
+			s1[n][s] /= division;
+			e1[n][s] /= division;
+		}
+
+		for(int i = n + 1; i < dim; i++) //a főátló alatt lévő elemek nullázása
+		{
+			double c = s1[i][n];
+
+			for(int j = 0; j < dim; j++) // segéd for az oszlopokon végig menni
 			{
-				E[i][j] = E[i][j]/A[i][j];
-				A[i][j] = A[i][j]/A[i][j];
+				s1[i][j] = s1[i][j] -c * s1[n][j];
+				e1[i][j] = e1[i][j] -c * e1[n][j];
+
 			}
 		}
-	for(int i = 0; i < dim; i++)
-	{
-		for(int j = 0; j < dim; j++)
-			std::cout << A[i][j] << ", "; 
-		std::cout<< std::endl;
+
+		for(int i = 0; i < n; i++) //a főátló felett lévő elemek nullázása
+		{
+			double c = s1[i][n];
+
+			for(int j = 0; j < dim; j++) // segéd for az oszlopokon végig menni
+			{
+				if(j >= n)
+				{
+					s1[i][j] = s1[i][j] -c * s1[n][j];	
+				}
+				
+				e1[i][j] = e1[i][j] -c * e1[n][j];
+
+			}
+		}
+
 	}
 
-	for(int i = 0; i < this->getRows(); i++)
+
+/*	for(int i = 0; i < dim; i++)
 	{
-		for(int j = 0; j < this->getColls(); j++)
-		{
-			std::cout << E[i][j] << ", ";
-		}
-		
+		for(int j = 0; j < dim; j++)
+			std::cout << s1[i][j] << ", ";
 		std::cout << std::endl;
 	}
 
-	k = 0;
-	for(int i = 0; i < this->getRows(); i++)
+	for(int i = 0; i < dim; i++)
 	{
-		for(int j = 0; j < this->getColls(); j++)
-		{
-			tempMatrix(k, E[i][j]);
-			k++;
-		}
+		for(int j = 0; j < dim; j++)
+			std::cout << e1[i][j] << ", ";
+		std::cout << std::endl;
 	}
+*/
+	std::vector<double> e2;
+	
+	for(int i = 0; i < dim; i++)
+		for(int j = 0; j < dim; j++)
+			e2.push_back(e1[i][j]);
+	
 
-
-	return tempMatrix;
+	Matrix<double> inv(dim,dim, e2);
+	return inv;
 }
 
 template<typename T>
 bool Matrix<T>::square(){
 	return this->getColls() == this->getRows() ? true : false; 
 }
+
+
+
 
 #endif

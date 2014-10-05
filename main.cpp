@@ -57,10 +57,16 @@ try{
 	std::cout << a;
 	std::cout << a.trans();
 
+	double tomb3[9] = {1.0,2.0,2.0,4.0,7.0,8.0,3.0,1.0,1.0};
+	//std::cout << f.inverse();
+	Matrix<double> g(3,3,tomb3);
 
-	std::cout << f.inverse();
-	//Matrix<double> g(3,3,tomb2);
-	//std::cout << g*g.inverse();
+	std::cout << "..........................InVeRsE............................" << std::endl << g;
+
+
+	std::cout << g.inverse() ;
+
+	std::cout << g * g.inverse();
 
  	} catch(myexception e){
  		std::cout << e.what()<< std::endl	;
